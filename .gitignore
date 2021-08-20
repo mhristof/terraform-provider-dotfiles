@@ -42,3 +42,4 @@ terraform.d/
 bin
 .terraform.lock.hcl .terraform.lock.hcl
 .terraform.lock.hcl
+terraform.tfplan

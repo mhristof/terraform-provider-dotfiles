@@ -116,7 +116,7 @@ func ExtractTarGzToFile(src string, file string) (string, error) {
 			return file, nil
 		default:
 			errors.New(fmt.Sprintf(
-				"ExtractTarGz: uknown type: %s in %s",
+				"ExtractTarGz: uknown type: %+v in %s",
 				header.Typeflag,
 				header.Name))
 		}

@@ -1,0 +1,62 @@
+package main
+
+// https://www.hashicorp.com/blog/managing-google-calendar-with-terraform
+
+import (
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/plugin"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+)
+
+func main() {
+	plugin.Serve(&plugin.ServeOpts{
+		ProviderFunc: func() terraform.ResourceProvider {
+			return Provider()
+		},
+	})
+}
+
+func Provider() *schema.Provider {
+	return &schema.Provider{
+		ResourcesMap: map[string]*schema.Resource{
+			"googlecalendar_event": resourceEvent(),
+		},
+		ConfigureFunc: providerConfigure,
+	}
+}
+
+func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+	// TODO
+	return nil, nil
+}
+
+func resourceEvent() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceEventCreate,
+		Read:   resourceEventRead,
+		Update: resourceEventUpdate,
+		Delete: resourceEventDelete,
+
+		Schema: map[string]*schema.Schema{},
+	}
+}
+
+func resourceEventCreate(d *schema.ResourceData, meta interface{}) error {
+	// TODO
+	return nil
+}
+
+func resourceEventRead(d *schema.ResourceData, meta interface{}) error {
+	// TODO
+	return nil
+}
+
+func resourceEventUpdate(d *schema.ResourceData, meta interface{}) error {
+	// TODO
+	return nil
+}
+
+func resourceEventDelete(d *schema.ResourceData, meta interface{}) error {
+	// TODO
+	return nil
+}

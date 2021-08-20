@@ -65,18 +65,13 @@ func TestLink(t *testing.T) {
 		dir, cleanup := createFs(t, test.fs)
 		defer cleanup()
 
-		terraformD, err := filepath.Abs("./terraform.d")
-		if err != nil {
-			t.Fatal(err)
+		for _, file := range []string{"./terraform.d", "./providers.tf"} {
+			abs, err := filepath.Abs(file)
+			if err != nil {
+				t.Fatal(err)
+			}
+			os.Symlink(abs, fmt.Sprintf("%s/%s", dir, file))
 		}
-
-		providerTf, err := filepath.Abs("./providers.tf")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		os.Symlink(terraformD, fmt.Sprintf("%s/terraform.d", dir))
-		os.Symlink(providerTf, fmt.Sprintf("%s/providers.tf", dir))
 
 		fmt.Println(fmt.Sprintf("dir: %+v", dir))
 

@@ -26,3 +26,32 @@ install: bin/terraform-provider-dotfiles
 	mkdir -p terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
 	mv $< terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
 
+.PHONY: init
+init: .terraform ## Force run 'terraform init'
+
+.terraform:  ##
+	terraform init
+
+.PHONY: plan
+plan: terraform.tfplan ## Runs 'terraform plan'
+
+terraform.tfplan: $(shell find ./ -name '*.tf') .terraform ## Creates terraform.tfplan if required
+	terraform plan -out $@
+
+.PHONY: apply
+apply: terraform.tfstate ## Run 'terraform apply'
+
+terraform.tfstate: terraform.tfplan ## Run 'terraform apply' if required'
+	terraform apply terraform.tfplan
+
+.PHONY: force
+force:  ## Forcefully update terraform state
+	touch *.tf && make terraform.tfstate
+
+.PHONY: destroy
+destroy:  ## Run 'terraform destroy'
+	terraform destroy -auto-approve
+
+.PHONY: clean
+clean: destroy ## Clean the repository resources
+	rm -rf terraform.tf{state,plan} .terraform terraform.state.d

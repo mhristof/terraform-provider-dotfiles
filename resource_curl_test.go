@@ -59,31 +59,34 @@ func TestCurl(t *testing.T) {
 	}
 
 	for _, test := range cases {
-		dir, cleanup := createFs(t, test.fs)
-		defer cleanup()
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			dir, cleanup := createFs(t, test.fs)
+			defer cleanup()
 
-		fmt.Println(fmt.Sprintf("dir: %+v", dir))
+			fmt.Println(fmt.Sprintf("dir: %+v", dir))
 
-		terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-			TerraformDir: dir,
+			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
+				TerraformDir: dir,
+			})
+
+			defer terraform.Destroy(t, terraformOptions)
+			terraform.InitAndApply(t, terraformOptions)
+
+			file := terraform.Output(t, terraformOptions, "file")
+			data, err := ioutil.ReadFile(filepath.Join(dir, file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			hash := sha256.Sum256(data)
+			assert.Equal(
+				t,
+				"4bf67172f2ada15c5538c37f86ed157300171540b92e119ab59cf6b1a2cb48b7",
+				hex.EncodeToString(hash[:]),
+				test.name,
+			)
+
 		})
-
-		defer terraform.Destroy(t, terraformOptions)
-		terraform.InitAndApply(t, terraformOptions)
-
-		file := terraform.Output(t, terraformOptions, "file")
-		data, err := ioutil.ReadFile(filepath.Join(dir, file))
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		hash := sha256.Sum256(data)
-		assert.Equal(
-			t,
-			"4bf67172f2ada15c5538c37f86ed157300171540b92e119ab59cf6b1a2cb48b7",
-			hex.EncodeToString(hash[:]),
-			test.name,
-		)
-
 	}
 }

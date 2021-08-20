@@ -27,6 +27,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"dotfiles_link": resourceLink(),
+			"dotfiles_curl": resourceCurl(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

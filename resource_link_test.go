@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,24 +10,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
-
-func createFs(t *testing.T, files map[string]string) (string, func()) {
-	dir, err := ioutil.TempDir("", "prefix")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for name, content := range files {
-		err = ioutil.WriteFile(filepath.Join(dir, name), []byte(content), 0644)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	return dir, func() {
-		os.RemoveAll(dir)
-	}
-}
 
 func TestLink(t *testing.T) {
 	var cases = []struct {
@@ -64,14 +45,6 @@ func TestLink(t *testing.T) {
 	for _, test := range cases {
 		dir, cleanup := createFs(t, test.fs)
 		defer cleanup()
-
-		for _, file := range []string{"./terraform.d", "./providers.tf"} {
-			abs, err := filepath.Abs(file)
-			if err != nil {
-				t.Fatal(err)
-			}
-			os.Symlink(abs, fmt.Sprintf("%s/%s", dir, file))
-		}
 
 		fmt.Println(fmt.Sprintf("dir: %+v", dir))
 

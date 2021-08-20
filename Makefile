@@ -27,7 +27,7 @@ install: terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/ter
 terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/terraform-provider-dotfiles: bin/terraform-provider-dotfiles
 	mkdir -p terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
 	cp $< terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
-	rm .terraform .terraform.lock.hcl -rf
+	rm terraform.tfstate .terraform .terraform.lock.hcl -rf
 
 .PHONY: init
 init: install .terraform ## Force run 'terraform init'
@@ -45,7 +45,7 @@ terraform.tfplan: terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_
 apply: terraform.tfstate ## Run 'terraform apply'
 
 terraform.tfstate: terraform.tfplan ## Run 'terraform apply' if required'
-	TF_LOG=DEBUG terraform apply terraform.tfplan
+	TF_LOG_PROVIDER=DEBUG terraform apply terraform.tfplan
 	rm terraform.tfplan
 
 .PHONY: force

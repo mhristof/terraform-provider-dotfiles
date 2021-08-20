@@ -22,12 +22,15 @@ bin/terraform-provider-dotfiles:  ## Build the application binary for target OS,
 	go build -o $@ -ldflags "-X $(PACKAGE)/version=$(GIT_TAG)+$(GIT_REF)" main.go
 
 .PHONY: install
-install: bin/terraform-provider-dotfiles
+install: terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/terraform-provider-dotfiles
+
+terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/terraform-provider-dotfiles: bin/terraform-provider-dotfiles
 	mkdir -p terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
 	mv $< terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
+	rm .terraform.lock.hcl
 
 .PHONY: init
-init: .terraform ## Force run 'terraform init'
+init: install .terraform ## Force run 'terraform init'
 
 .terraform:  ##
 	terraform init

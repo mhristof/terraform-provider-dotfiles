@@ -19,7 +19,7 @@ func main() {
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
-			"googlecalendar_event": resourceEvent(),
+			"dotfiles_link": resourceEvent(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
@@ -37,7 +37,12 @@ func resourceEvent() *schema.Resource {
 		Update: resourceEventUpdate,
 		Delete: resourceEventDelete,
 
-		Schema: map[string]*schema.Schema{},
+		Schema: map[string]*schema.Schema{
+			"source": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+		},
 	}
 }
 

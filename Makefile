@@ -18,8 +18,8 @@ help:  ## Show this help
 test:  ## Run go test
 	go test -v ./...
 
-bin/terraform-provider-dotfiles: main.go ## Build the application binary for target OS, for example bin/terraform-provider-dotfiles.linux
-	go build -o $@ -ldflags "-X $(PACKAGE)/version=$(GIT_TAG)+$(GIT_REF)" main.go
+bin/terraform-provider-dotfiles: $(shell find ./ -name '*.go') ## Build the application binary for target OS, for example bin/terraform-provider-dotfiles.linux
+	go build -o $@ -ldflags "-X $(PACKAGE)/version=$(GIT_TAG)+$(GIT_REF)" *.go
 
 .PHONY: install
 install: terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/terraform-provider-dotfiles

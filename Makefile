@@ -15,7 +15,7 @@ help:  ## Show this help
 	@grep '.*:.*##' Makefile | grep -v grep  | sort | sed 's/:.* ##/:/g' | column -t -s:
 
 .PHONY: test
-test:  ## Run go test
+test:  terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/terraform-provider-dotfiles ## Run go test
 	go test -v ./...
 
 bin/terraform-provider-dotfiles: $(shell find ./ -name '*.go') ## Build the application binary for target OS, for example bin/terraform-provider-dotfiles.linux

@@ -3,5 +3,7 @@ provider "dotfiles" {
 }
 
 resource "dotfiles_link" "foo" {
-  source = ".zshrc"
+  dest         = ".zshrc"
+  source       = "fixtures/.zshrc"
+  strip_source = true
 }

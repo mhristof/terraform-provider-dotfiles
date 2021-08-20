@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -55,9 +56,18 @@ func resourceEvent() *schema.Resource {
 		Delete: resourceEventDelete,
 
 		Schema: map[string]*schema.Schema{
+			"dest": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"source": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"strip_source": &schema.Schema{
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
 			},
 		},
 	}
@@ -68,6 +78,8 @@ func resourceEventCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Println(fmt.Sprintf("[DEBUG] config: %+v", config))
 
+	dest := d.Get("dest").(string)
+	d.SetId(dest)
 	source := d.Get("source").(string)
 
 	_, err := os.Stat(source)
@@ -81,13 +93,19 @@ func resourceEventCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	dest := filepath.Join(config.root, source)
+	lnDest := linkDest(config.root, dest, d.Get("strip_source").(bool))
 
-	os.Symlink(abs, dest)
+	os.Symlink(abs, lnDest)
 
-	log.Println(fmt.Sprintf("[DEBUG] ln %s %s", abs, dest))
-	d.SetId(source)
+	log.Println(fmt.Sprintf("[DEBUG] ln %s %s", abs, lnDest))
 	return resourceEventRead(d, meta)
+}
+
+func linkDest(dir, name string, stripName bool) string {
+	if stripName {
+		name = path.Base(name)
+	}
+	return filepath.Join(dir, name)
 }
 
 func resourceEventRead(d *schema.ResourceData, meta interface{}) error {
@@ -101,6 +119,12 @@ func resourceEventUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEventDelete(d *schema.ResourceData, meta interface{}) error {
-	// TODO
+	config := meta.(*cfg)
+	source := d.Get("source").(string)
+
+	dest := linkDest(config.root, source, d.Get("strip_source").(bool))
+
+	os.Remove(dest)
+
 	return nil
 }

@@ -46,13 +46,17 @@ func resourceEvent() *schema.Resource {
 	}
 }
 
+type File struct {
+	path string
+}
+
 func resourceEventCreate(d *schema.ResourceData, meta interface{}) error {
-	// TODO
-	return nil
+	source := d.Get("source").(string)
+	d.SetId(source)
+	return resourceEventRead(d, meta)
 }
 
 func resourceEventRead(d *schema.ResourceData, meta interface{}) error {
-	// TODO
 	return nil
 }
 

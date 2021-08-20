@@ -18,7 +18,7 @@ help:  ## Show this help
 test:  ## Run go test
 	go test -v ./...
 
-bin/terraform-provider-dotfiles:  ## Build the application binary for target OS, for example bin/terraform-provider-dotfiles.linux
+bin/terraform-provider-dotfiles: main.go ## Build the application binary for target OS, for example bin/terraform-provider-dotfiles.linux
 	go build -o $@ -ldflags "-X $(PACKAGE)/version=$(GIT_TAG)+$(GIT_REF)" main.go
 
 .PHONY: install
@@ -26,8 +26,8 @@ install: terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/ter
 
 terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/terraform-provider-dotfiles: bin/terraform-provider-dotfiles
 	mkdir -p terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
-	mv $< terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
-	rm .terraform.lock.hcl
+	cp $< terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64
+	rm .terraform .terraform.lock.hcl -rf
 
 .PHONY: init
 init: install .terraform ## Force run 'terraform init'
@@ -38,14 +38,15 @@ init: install .terraform ## Force run 'terraform init'
 .PHONY: plan
 plan: terraform.tfplan ## Runs 'terraform plan'
 
-terraform.tfplan: $(shell find ./ -name '*.tf') .terraform ## Creates terraform.tfplan if required
+terraform.tfplan: terraform.d/plugins/github.com/mhristof/dotfiles/0.1.0/darwin_amd64/terraform-provider-dotfiles $(shell find ./ -name '*.tf') .terraform ## Creates terraform.tfplan if required
 	terraform plan -out $@
 
 .PHONY: apply
 apply: terraform.tfstate ## Run 'terraform apply'
 
 terraform.tfstate: terraform.tfplan ## Run 'terraform apply' if required'
-	terraform apply terraform.tfplan
+	TF_LOG=DEBUG terraform apply terraform.tfplan
+	rm terraform.tfplan
 
 .PHONY: force
 force:  ## Forcefully update terraform state

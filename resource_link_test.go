@@ -23,7 +23,6 @@ func createFs(t *testing.T, files map[string]string) (string, func()) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
 	}
 
 	return dir, func() {

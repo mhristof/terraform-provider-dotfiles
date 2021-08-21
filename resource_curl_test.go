@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -123,6 +125,43 @@ func TestCurl(t *testing.T) {
 					t,
 					"e34fd545ed520ad1e62abb894ca5b858b23b06110dfd19f3ca11397414c79385",
 					calculateSHA256(t, filepath.Join(dir, file)),
+					name,
+				)
+			},
+		},
+		{
+			name: "setting filemode",
+			fs: map[string]string{
+				"main.tf": heredoc.Doc(`
+					provider "dotfiles" {}
+
+					locals {
+						dest = "foo.txt"
+					}
+
+					resource "dotfiles_curl" "foo" {
+					  url = "https://raw.githubusercontent.com/alphagov/collections/main/LICENCE.txt"
+					  dest = local.dest
+					  mode = "0700"
+					}
+
+					output "file" {
+						value = local.dest
+					}
+				`),
+			},
+			validate: func(t *testing.T, dir, file, name string) {
+				fileInfo, err := os.Stat(filepath.Join(dir, file))
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				mode := fileInfo.Mode()
+
+				assert.Equal(
+					t,
+					fs.FileMode(0x1c0),
+					mode,
 					name,
 				)
 			},

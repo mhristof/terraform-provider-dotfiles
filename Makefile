@@ -3,7 +3,7 @@ SHELL := /bin/bash
 ifeq ($(word 1,$(subst ., ,$(MAKE_VERSION))),4)
 .SHELLFLAGS := -eu -o pipefail -c
 endif
-.DEFAULT_GOAL := bin/terraform-provider-dotfiles
+.DEFAULT_GOAL := apply
 .ONESHELL:
 
 GIT_REF := $(shell git describe --match="" --always --dirty=+)

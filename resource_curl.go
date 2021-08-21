@@ -6,7 +6,6 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,9 +14,11 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/pkg/errors"
 )
 
 func checksum(path string) (string, error) {
@@ -54,10 +55,47 @@ func resourceCurl() *schema.Resource {
 			"sha256sum": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
-				//ForceNew: true,
+			},
+			"mode": {
+				Type:         schema.TypeString,
+				Description:  "Permissions to set for the output file",
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "0755",
+				ValidateFunc: validateMode,
 			},
 		},
 	}
+}
+
+func validateMode(i interface{}, k string) (s []string, es []error) {
+	v, ok := i.(string)
+
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	if len(v) > 4 || len(v) < 3 {
+		es = append(es, fmt.Errorf("bad mode for file - string length should be 3 or 4 digits: %s", v))
+	}
+
+	fileMode, err := strconv.ParseInt(v, 8, 64)
+
+	if err != nil || fileMode > 0777 || fileMode < 0 {
+		es = append(es, fmt.Errorf("bad mode for file - must be three octal digits: %s", v))
+	}
+
+	return
+}
+
+func setMode(path, mode string) error {
+	fileMode, err := strconv.ParseInt(mode, 8, 32)
+	if err != nil {
+		return err
+	}
+
+	return os.Chmod(path, os.FileMode(fileMode))
 }
 
 func resourceCurlCreate(d *schema.ResourceData, meta interface{}) error {
@@ -98,6 +136,11 @@ func resourceCurlCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("sha256sum", cs)
+	mode := d.Get("mode").(string)
+	err = setMode(dest, mode)
+	if err != nil {
+		return errors.Wrapf(err, "failed to chmod %s %s", dest, mode)
+	}
 
 	log.Println(fmt.Sprintf("[DEBUG] wget %s %s", url, dest))
 	return resourceCurlRead(d, meta)

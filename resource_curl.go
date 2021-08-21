@@ -4,9 +4,12 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +19,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
+
+func checksum(path string) (string, error) {
+
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:]), nil
+}
 
 func resourceCurl() *schema.Resource {
 	return &schema.Resource{
@@ -37,6 +51,11 @@ func resourceCurl() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"sha256sum": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+				//ForceNew: true,
+			},
 		},
 	}
 }
@@ -56,14 +75,22 @@ func resourceCurlCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if extract != "" {
 		var err error
+		var file string
 		switch {
 		case strings.Contains(dest, ".zip"):
-			_, err = ExtractZipToFile(dest, filepath.Join(config.root, extract))
+			file, err = ExtractZipToFile(dest, filepath.Join(config.root, extract))
 		case strings.Contains(dest, ".tar.gz"):
-			_, err = ExtractTarGzToFile(dest, filepath.Join(config.root, extract))
+			file, err = ExtractTarGzToFile(dest, filepath.Join(config.root, extract))
 		default:
 			err = errors.New("unsupported archive type")
 		}
+		d.SetId(file)
+		cs, err := checksum(file)
+		if err != nil {
+			return err
+		}
+
+		d.Set("sha256sum", cs)
 		os.Remove(dest)
 		return err
 	}
@@ -203,10 +230,22 @@ func getDest(d *schema.ResourceData, meta interface{}) (string, string) {
 
 func resourceCurlRead(d *schema.ResourceData, meta interface{}) error {
 	log.Println("[DEBUG] reading resource event")
+	file := d.Id()
+	cs, err := checksum(file)
+	if err != nil {
+		return err
+	}
+
+	if d.Get("sha256sum").(string) != cs {
+		d.SetId("")
+		return nil
+	}
+
 	return nil
 }
 
 func resourceCurlUpdate(d *schema.ResourceData, meta interface{}) error {
+	log.Println("[DEBUG] update resource event")
 	return resourceCurlCreate(d, meta)
 }
 

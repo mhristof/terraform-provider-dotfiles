@@ -1,10 +1,7 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -14,12 +11,11 @@ import (
 )
 
 func calculateSHA256(t *testing.T, file string) string {
-	data, err := ioutil.ReadFile(file)
+	cs, err := checksum(file)
 	if err != nil {
 		t.Fatal(err)
 	}
-	hash := sha256.Sum256(data)
-	return hex.EncodeToString(hash[:])
+	return cs
 }
 
 func TestCurl(t *testing.T) {

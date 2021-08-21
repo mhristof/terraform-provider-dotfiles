@@ -67,8 +67,6 @@ func resourceCurlCreate(d *schema.ResourceData, meta interface{}) error {
 
 	url, dest := getDest(d, meta)
 
-	d.SetId(dest)
-
 	Wget(url, dest)
 
 	extract := d.Get("extract").(string)
@@ -84,16 +82,22 @@ func resourceCurlCreate(d *schema.ResourceData, meta interface{}) error {
 		default:
 			err = errors.New("unsupported archive type")
 		}
-		d.SetId(file)
-		cs, err := checksum(file)
+
 		if err != nil {
 			return err
 		}
 
-		d.Set("sha256sum", cs)
 		os.Remove(dest)
+		dest = file
+	}
+
+	d.SetId(dest)
+	cs, err := checksum(dest)
+	if err != nil {
 		return err
 	}
+
+	d.Set("sha256sum", cs)
 
 	log.Println(fmt.Sprintf("[DEBUG] wget %s %s", url, dest))
 	return resourceCurlRead(d, meta)

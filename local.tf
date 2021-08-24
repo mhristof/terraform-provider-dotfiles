@@ -8,11 +8,9 @@ terraform {
 }
 
 provider "dotfiles" {
-  root = "/tmp/dotfiles"
-  # example configuration here
+  root = "/tmp"
 }
 
 resource "dotfiles_file" "dots" {
-  src  = ".foo"
-  path = ".foo"
+  src = "local.tf"
 }

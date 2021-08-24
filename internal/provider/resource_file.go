@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,30 +21,45 @@ func resourceFile() *schema.Resource {
 			"src": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"path": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
-			},
-			"state": &schema.Schema{
-				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "link",
 			},
 		},
 	}
 }
 
+func calculatePath(root, src, dest string) string {
+	if dest == "" {
+		dest = src
+	}
+
+	if strings.HasPrefix(dest, "/") {
+		// dest is abs path
+		return dest
+	}
+
+	return filepath.Join(root, dest)
+}
+
 func resourceFileCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
+	config := m.(*apiClient)
 
-	path := d.Get("path").(string)
-	//src := d.Get("src").(string)
-	//state := d.Get("state").(string)
+	path := calculatePath(config.root, d.Get("src").(string), d.Get("path").(string))
 
-	log.Println(fmt.Sprintf("path: %+v", path))
+	abs, err := filepath.Abs(d.Get("src").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
+	log.Println("ln", abs, path)
+
+	os.Symlink(abs, path)
+
+	d.SetId(path)
 	return diags
 }
 

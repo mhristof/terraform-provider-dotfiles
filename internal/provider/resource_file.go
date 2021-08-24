@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -26,6 +27,14 @@ func resourceFile() *schema.Resource {
 			"path": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"src_abs": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"path_abs": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -57,8 +66,17 @@ func resourceFileCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	log.Println("ln", abs, path)
 
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "File already exists",
+			Detail:   fmt.Sprintf("File [%s] exists in the filesystem and terraform would overwrite it. Please remove the file and try again", path),
+		})
+	}
 	os.Symlink(abs, path)
 
+	d.Set("src_abs", abs)
+	d.Set("path_abs", path)
 	d.SetId(path)
 	return diags
 }
@@ -66,6 +84,35 @@ func resourceFileCreate(ctx context.Context, d *schema.ResourceData, m interface
 func resourceFileRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
+
+	id := d.Id()
+	if _, err := os.Stat(id); os.IsNotExist(err) {
+		d.SetId("")
+		return diags
+	}
+
+	fileInfo, err := os.Lstat(id)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if fileInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
+		d.SetId("")
+		return diags
+	}
+
+	dest, err := os.Readlink(id)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Println(fmt.Sprintf("dest: %+v", dest))
+	fmt.Println(fmt.Sprintf("d.Get('src_abs').(string): %+v", d.Get("src_abs").(string)))
+
+	if dest != d.Get("src_abs").(string) {
+		d.SetId("")
+		return diags
+	}
 
 	return diags
 }

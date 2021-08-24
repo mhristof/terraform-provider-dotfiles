@@ -12,5 +12,9 @@ provider "dotfiles" {
 }
 
 resource "dotfiles_file" "dots" {
-  src = "local.tf"
+  src = "README.md"
+}
+
+output "dots" {
+  value = dotfiles_file.dots
 }

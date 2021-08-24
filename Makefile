@@ -43,6 +43,7 @@ destroy:  ## Run 'terraform destroy'
 .PHONY: clean
 clean: destroy ## Clean the repository resources
 	rm -rf terraform.tf{state,plan} .terraform terraform.state.d
+	rm bin/*
 
 .PHONY: test
 test:  ## Run go test

@@ -3,12 +3,14 @@ SHELL := /bin/bash
 ifeq ($(word 1,$(subst ., ,$(MAKE_VERSION))),4)
 .SHELLFLAGS := -eu -o pipefail -c
 endif
-.DEFAULT_GOAL := bin/terraform-provider-dotfiles.darwin
+.DEFAULT_GOAL := apply
 .ONESHELL:
 
 PACKAGE := $(shell go list)
 GIT_REF := $(shell git describe --match="" --always --dirty=+)
 GIT_TAG := $(shell git name-rev --tags --name-only $(GIT_REF))
+BIN := terraform-provider-dotfiles-local
+LOCAL_BIN := terraform.d/plugins/github.com/mhristof/dotfiles-local/0.1.0/darwin_amd64/$(BIN)
 
 .PHONY: help
 help:  ## Show this help
@@ -17,13 +19,13 @@ help:  ## Show this help
 .PHONY: init
 init: .terraform ## Force run 'terraform init'
 
-.terraform:  ## 
+.terraform: ## 
 	terraform init
 
 .PHONY: plan
 plan: terraform.tfplan ## Runs 'terraform plan'
 
-terraform.tfplan: $(shell find ./ -name '*.tf') .terraform ## Creates terraform.tfplan if required
+terraform.tfplan: $(LOCAL_BIN) $(shell find ./ -name '*.tf') .terraform ## Creates terraform.tfplan if required
 	terraform plan -out $@
 
 .PHONY: apply
@@ -43,7 +45,7 @@ destroy:  ## Run 'terraform destroy'
 .PHONY: clean
 clean: destroy ## Clean the repository resources
 	rm -rf terraform.tf{state,plan} .terraform terraform.state.d
-	rm bin/*
+	rm bin/* -rf .terraform.d
 
 .PHONY: test
 test:  ## Run go test
@@ -52,10 +54,8 @@ test:  ## Run go test
 bin/terraform-provider-dotfiles.darwin:  ## Build the application binary for current OS
 
 bin/terraform-provider-dotfiles.%:  ## Build the application binary for target OS, for example bin/terraform-provider-dotfiles.linux
-	GOOS=$* go build -o $@ -ldflags "-X $(PACKAGE)/version=$(GIT_TAG)+$(GIT_REF)" main.go
+	GOOS=$* go build -o $@ main.go
 
-.PHONY: install
-install: bin/terraform-provider-dotfiles.darwin ## Install the binary
-	cp $< ~/bin/terraform-provider-dotfiles
-
-unknown flag: --go
+$(LOCAL_BIN): bin/terraform-provider-dotfiles.darwin
+	mkdir -p $(shell dirname $@)
+	cp $< $@

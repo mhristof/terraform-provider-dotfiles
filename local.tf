@@ -11,3 +11,8 @@ provider "dotfiles" {
   root = "/tmp/dotfiles"
   # example configuration here
 }
+
+resource "dotfiles_file" "dots" {
+  src  = ".foo"
+  path = ".foo"
+}

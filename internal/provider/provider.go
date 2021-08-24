@@ -39,7 +39,7 @@ func New(version string) func() *schema.Provider {
 				// "dotfiles_data_source": dataSourceDotfiles(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
-				// "dotfiles_resource": resourceDotfiles(),
+				"dotfiles_file": resourceFile(),
 			},
 		}
 

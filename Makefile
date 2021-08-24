@@ -32,7 +32,7 @@ terraform.tfplan: $(LOCAL_BIN) $(shell find ./ -name '*.tf') .terraform ## Creat
 apply: terraform.tfstate ## Run 'terraform apply'
 
 terraform.tfstate: terraform.tfplan ## Run 'terraform apply' if required'
-	terraform apply terraform.tfplan
+	TF_LOG_PROVIDER=DEBUG terraform apply terraform.tfplan
 
 .PHONY: force
 force:  ## Forcefully update terraform state
@@ -40,12 +40,12 @@ force:  ## Forcefully update terraform state
 
 .PHONY: destroy
 destroy:  ## Run 'terraform destroy'
-	terraform destroy -auto-approve
+	-terraform destroy -auto-approve
 
 .PHONY: clean
 clean: destroy ## Clean the repository resources
 	rm -rf terraform.tf{state,plan} .terraform terraform.state.d
-	rm bin/* -rf .terraform.d
+	rm bin/* -rf .terraform.d .terraform.lock.hcl
 
 .PHONY: test
 test:  ## Run go test
@@ -59,4 +59,5 @@ bin/terraform-provider-dotfiles.%: $(shell find ./ -name '*.go')  ## Build the a
 $(LOCAL_BIN): bin/terraform-provider-dotfiles.darwin
 	mkdir -p $(shell dirname $@)
 	cp $< $@
-	-rm .terraform.lock.hcl
+	rm .terraform.lock.hcl -rf
+	terraform init

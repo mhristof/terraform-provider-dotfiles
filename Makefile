@@ -48,7 +48,7 @@ clean: destroy ## Clean the repository resources
 
 .PHONY: test
 test:  ## Run go test
-	go test -v ./...
+	TF_ACC=1 go test -v ./...
 
 bin/terraform-provider-dotfiles.darwin:  ## Build the application binary for current OS
 

@@ -6,14 +6,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var testAccProviders map[string]*schema.Provider
 var testAccProvider *schema.Provider
 
 func init() {
 	testAccProvider = New()
-	testAccProviders = map[string]*schema.Provider{
-		"dotfiles": testAccProvider,
-	}
 }
 
 func TestProvider(t *testing.T) {

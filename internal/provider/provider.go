@@ -22,6 +22,17 @@ func init() {
 	// }
 }
 
+func NewWithRoot(root string) *schema.Provider {
+	provider := New()
+
+	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+		return &apiClient{
+			root: root,
+		}, nil
+	}
+	return provider
+}
+
 func New() *schema.Provider {
 	pwd, _ := os.Getwd()
 	return &schema.Provider{

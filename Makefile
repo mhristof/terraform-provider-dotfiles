@@ -53,9 +53,10 @@ test:  ## Run go test
 
 bin/terraform-provider-dotfiles.darwin:  ## Build the application binary for current OS
 
-bin/terraform-provider-dotfiles.%:  ## Build the application binary for target OS, for example bin/terraform-provider-dotfiles.linux
+bin/terraform-provider-dotfiles.%: $(shell find ./ -name '*.go')  ## Build the application binary for target OS, for example bin/terraform-provider-dotfiles.linux
 	GOOS=$* go build -o $@ main.go
 
 $(LOCAL_BIN): bin/terraform-provider-dotfiles.darwin
 	mkdir -p $(shell dirname $@)
 	cp $< $@
+	-rm .terraform.lock.hcl

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,8 +25,16 @@ func init() {
 }
 
 func New(version string) func() *schema.Provider {
+	pwd, _ := os.Getwd()
 	return func() *schema.Provider {
 		p := &schema.Provider{
+			Schema: map[string]*schema.Schema{
+				"root": &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  pwd,
+				},
+			},
 			DataSourcesMap: map[string]*schema.Resource{
 				// "dotfiles_data_source": dataSourceDotfiles(),
 			},
@@ -54,4 +63,5 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 
 		return &apiClient{}, nil
 	}
+
 }

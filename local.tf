@@ -8,5 +8,6 @@ terraform {
 }
 
 provider "dotfiles" {
+  root = "/tmp/dotfiles"
   # example configuration here
 }

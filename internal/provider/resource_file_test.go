@@ -29,7 +29,7 @@ func TestFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
+	//defer os.RemoveAll(dir)
 
 	providers := map[string]*schema.Provider{
 		"dotfiles": NewWithRoot(dir),
@@ -62,40 +62,42 @@ func TestFile(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "id", filepath.Join(dir, file)),
 				),
 			},
+			{
+				// idempotency
+				Config:             config(file),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			{
+				// file got removed from an outside source
+				Config: config(file),
+				PreConfig: func() {
+					os.Remove(filepath.Join(dir, file))
+				},
+				Check: resource.ComposeTestCheckFunc(
+					func(s *terraform.State) error {
+						rs := s.RootModule().Resources[resourceName]
+						if _, err := os.Stat(rs.Primary.ID); os.IsNotExist(err) {
+							return errors.Wrapf(err, "file [%s] not found", rs.Primary.ID)
+						}
+
+						return nil
+					},
+				),
+			},
 			// {
-			// 	ResourceName:            resourceName,
-			// 	ImportState:             true,
-			// 	ImportStateVerify:       true,
-			// 	ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
-			// },
-			// {
-			// 	Config: testAccAWSS3BucketConfig_withUpdatedTags(bucketName),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckAWSS3BucketExists(resourceName),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
-			// 	),
-			// },
-			// {
-			// 	Config: testAccAWSS3BucketConfig_withNoTags(bucketName),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckAWSS3BucketExists(resourceName),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-			// 	),
-			// },
-			// Verify update from 0 tags.
-			// {
-			// 	Config: testAccAWSS3BucketConfig_withTags(bucketName),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckAWSS3BucketExists(resourceName),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-			// 	),
+			// 	// file got replaced with another file
+			// 	Config: config(file),
+			// 	PreConfig: func() {
+			// 		path := filepath.Join(dir, file)
+			// 		os.Remove(path)
+			// 		err := ioutil.WriteFile(path, []byte("test"), 0644)
+			// 		if err != nil {
+			// 			t.Fatal(err)
+			// 		}
+
+			// 	},
+			// 	ExpectNonEmptyPlan: false,
 			// },
 		},
 	})

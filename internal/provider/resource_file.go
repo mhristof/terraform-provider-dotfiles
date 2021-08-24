@@ -93,23 +93,24 @@ func resourceFileRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	fileInfo, err := os.Lstat(id)
 	if err != nil {
+		// TODO: test
 		return diag.FromErr(err)
 	}
 
 	if fileInfo.Mode()&os.ModeSymlink != os.ModeSymlink {
+		// TODO: test
 		d.SetId("")
 		return diags
 	}
 
 	dest, err := os.Readlink(id)
 	if err != nil {
+		// TODO: test
 		return diag.FromErr(err)
 	}
 
-	log.Println(fmt.Sprintf("dest: %+v", dest))
-	fmt.Println(fmt.Sprintf("d.Get('src_abs').(string): %+v", d.Get("src_abs").(string)))
-
 	if dest != d.Get("src_abs").(string) {
+		// TODO: test
 		d.SetId("")
 		return diags
 	}

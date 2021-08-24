@@ -1,10 +1,8 @@
 package provider
 
 import (
-	"context"
 	"os"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -24,47 +22,34 @@ func init() {
 	// }
 }
 
-func New(version string) func() *schema.Provider {
+func New() *schema.Provider {
 	pwd, _ := os.Getwd()
-	return func() *schema.Provider {
-		p := &schema.Provider{
-			Schema: map[string]*schema.Schema{
-				"root": &schema.Schema{
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  pwd,
-				},
+	return &schema.Provider{
+		Schema: map[string]*schema.Schema{
+			"root": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  pwd,
 			},
-			DataSourcesMap: map[string]*schema.Resource{
-				// "dotfiles_data_source": dataSourceDotfiles(),
-			},
-			ResourcesMap: map[string]*schema.Resource{
-				"dotfiles_file": resourceFile(),
-			},
-		}
-
-		p.ConfigureContextFunc = configure(version, p)
-
-		return p
+		},
+		DataSourcesMap: map[string]*schema.Resource{
+			// "dotfiles_data_source": dataSourceDotfiles(),
+		},
+		ResourcesMap: map[string]*schema.Resource{
+			"dotfiles_file": resourceFile(),
+		},
+		ConfigureFunc: providerConfigure,
 	}
+
+}
+
+func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+	root := d.Get("root").(string)
+	return &apiClient{
+		root: root,
+	}, nil
 }
 
 type apiClient struct {
-	// Add whatever fields, client or connection info, etc. here
-	// you would need to setup to communicate with the upstream
-	// API.
 	root string
-}
-
-func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		// Setup a User-Agent for your API client (replace the provider name for yours):
-		// userAgent := p.UserAgent("terraform-provider-dotfiles", version)
-		// TODO: myClient.UserAgent = userAgent
-
-		return &apiClient{
-			root: d.Get("root").(string),
-		}, nil
-	}
-
 }

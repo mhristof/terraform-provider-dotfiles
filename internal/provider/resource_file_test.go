@@ -25,19 +25,22 @@ func config(file string) string {
 func TestFile(t *testing.T) {
 	resourceName := "dotfiles_file.dots"
 	file := "provider.go"
+	srcAbs, err := filepath.Abs(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	dir, err := ioutil.TempDir("", "tf")
 	if err != nil {
 		t.Fatal(err)
 	}
-	//defer os.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 
 	providers := map[string]*schema.Provider{
 		"dotfiles": NewWithRoot(dir),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		//PreCheck:     func() { testAccPreCheck(t) },
-		//ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers: providers,
 		CheckDestroy: func(s *terraform.State) error {
 			rs := s.RootModule().Resources[resourceName].Primary.ID
@@ -60,6 +63,9 @@ func TestFile(t *testing.T) {
 						return nil
 					},
 					resource.TestCheckResourceAttr(resourceName, "id", filepath.Join(dir, file)),
+					resource.TestCheckResourceAttr(resourceName, "src_abs", srcAbs),
+					resource.TestCheckResourceAttr(resourceName, "path_abs", filepath.Join(dir, file)),
+					resource.TestCheckResourceAttr(resourceName, "src", file),
 				),
 			},
 			{

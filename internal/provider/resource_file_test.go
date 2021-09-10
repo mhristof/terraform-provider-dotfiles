@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/MakeNowJust/heredoc"
@@ -91,20 +92,21 @@ func TestFile(t *testing.T) {
 					},
 				),
 			},
-			// {
-			// 	// file got replaced with another file
-			// 	Config: config(file),
-			// 	PreConfig: func() {
-			// 		path := filepath.Join(dir, file)
-			// 		os.Remove(path)
-			// 		err := ioutil.WriteFile(path, []byte("test"), 0644)
-			// 		if err != nil {
-			// 			t.Fatal(err)
-			// 		}
+			{
+				// file got replaced with another file
+				Config:      config(file),
+				ExpectError: regexp.MustCompile(`EEXIST`),
+				PreConfig: func() {
+					path := filepath.Join(dir, file)
+					os.Remove(path)
+					err := ioutil.WriteFile(path, []byte("test"), 0644)
+					if err != nil {
+						t.Fatal(err)
+					}
 
-			// 	},
-			// 	ExpectNonEmptyPlan: false,
-			// },
+				},
+				ExpectNonEmptyPlan: false,
+			},
 		},
 	})
 }

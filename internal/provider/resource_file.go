@@ -69,7 +69,7 @@ func resourceFileCreate(ctx context.Context, d *schema.ResourceData, m interface
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		return append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "File already exists",
+			Summary:  "EEXIST",
 			Detail:   fmt.Sprintf("File [%s] exists in the filesystem and terraform would overwrite it. Please remove the file and try again", path),
 		})
 	}

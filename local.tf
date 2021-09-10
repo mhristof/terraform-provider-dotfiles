@@ -11,10 +11,15 @@ provider "dotfiles" {
   root = "/tmp"
 }
 
+resource "dotfiles_archive" "archives" {
+  url  = "https://github.com/terraform-linters/tflint/releases/download/v0.31.0/tflint_darwin_amd64.zip"
+  file = "tflint"
+}
+
 resource "dotfiles_file" "dots" {
   src = "README.md"
 }
 
-output "dots" {
-  value = dotfiles_file.dots
+output "archives" {
+  value = dotfiles_archive.archives
 }

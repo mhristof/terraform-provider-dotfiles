@@ -47,7 +47,8 @@ func New() *schema.Provider {
 			// "dotfiles_data_source": dataSourceDotfiles(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"dotfiles_file": resourceFile(),
+			"dotfiles_file":    resourceFile(),
+			"dotfiles_archive": resourceArchive(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
